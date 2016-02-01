@@ -1,4 +1,4 @@
-# Swift Snippets & Utilities
+# Swift Snippets and Utilities
 
 This repository contains some Swift snippets and utilities. Experimental.
 
@@ -13,11 +13,11 @@ _Swift 2.1.1._
 > ```swift
 > struct MyStruct { ... }
 >
-> /* Conform construct to EquatableConstruct  */
+> /* Conform construct to EquatableConstruct */
 > extension MyStruct : EquatableConstruct { }
 >
 > /* Construct will automatically conform to Equatable
-> with property-by-property comparison               */
+>    with property-by-property comparison    */
 > var foo = MyStruct(myInt: 1, myString: "foo")
 > var bar = MyStruct(myInt: 1, myString: "bar")
 >
