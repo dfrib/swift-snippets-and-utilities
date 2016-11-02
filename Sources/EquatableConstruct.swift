@@ -68,45 +68,6 @@ extension UInt8 : PseudoEquatableType {}
 extension UInt16 : PseudoEquatableType {}
 extension UInt32 : PseudoEquatableType {}
 extension UInt64 : PseudoEquatableType {}
-
-extension Double : PseudoEquatableType {}
-extension Float : PseudoEquatableType {}
-extension Float80 : PseudoEquatableType {}
-
-extension String : PseudoEquatableType {}
-// ...
-
-/*  EquatableConstruct conformance to Equatable  */
-func ==<T: EquatableConstruct>(lhs: T, rhs: T) -> Bool {
-protocol EquatableConstruct : Equatable { }
-
-/*  Heterogeneous protocol acts as generic type constraint
- for allowed property types in EquatableConstruct         */
-protocol PseudoEquatableType {
-    func isEqualTo(_ other: PseudoEquatableType) -> Bool
-}
-
-extension PseudoEquatableType where Self : Equatable {
-    func isEqualTo(_ other: PseudoEquatableType) -> Bool {
-        if let o = other as? Self { return self == o }
-        return false
-    }
-}
-
-/* Extend fundamental (equatable) Swift types to PseudoEquatableType  */
-extension Bool : PseudoEquatableType {}
-
-extension Int : PseudoEquatableType {}
-extension Int8 : PseudoEquatableType {}
-extension Int16 : PseudoEquatableType {}
-extension Int32 : PseudoEquatableType {}
-extension Int64 : PseudoEquatableType {}
-
-extension UInt : PseudoEquatableType {}
-extension UInt8 : PseudoEquatableType {}
-extension UInt16 : PseudoEquatableType {}
-extension UInt32 : PseudoEquatableType {}
-extension UInt64 : PseudoEquatableType {}
     
 /*  EquatableConstruct's conformance to Equatable  */
 protocol EquatableConstruct : Equatable { }
