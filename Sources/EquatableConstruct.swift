@@ -41,14 +41,14 @@
 ///
 protocol EquatableConstruct : Equatable { }
 
-/*  Heterogeneous protocol acts as generic type constraint
-    for allowed property types in EquatableConstruct         */
+/*  Heterogeneous protocol acts as castable meta-type used for
+    property-by-property equalitu testing in EquatableConstruct   */
 protocol PseudoEquatableType {
-    func isEqualTo(other: PseudoEquatableType) -> Bool
+    func isEqual(to other: PseudoEquatableType) -> Bool
 }
 
 extension PseudoEquatableType where Self : Equatable {
-    func isEqualTo(other: PseudoEquatableType) -> Bool {
+    func isEqual(to other: PseudoEquatableType) -> Bool {
         if let o = other as? Self { return self == o }
         return false
     }
@@ -107,52 +107,35 @@ extension UInt8 : PseudoEquatableType {}
 extension UInt16 : PseudoEquatableType {}
 extension UInt32 : PseudoEquatableType {}
 extension UInt64 : PseudoEquatableType {}
-
-extension Double : PseudoEquatableType {}
-extension Float : PseudoEquatableType {}
-extension Float80 : PseudoEquatableType {}
-
-extension String : PseudoEquatableType {}
-// ...
-/*  EquatableConstruct conformance to Equatable  */
-func ==<T: EquatableConstruct>(lhs: T, rhs: T) -> Bool {
     
+/*  EquatableConstruct's conformance to Equatable  */
+protocol EquatableConstruct : Equatable { }
+func ==<T: EquatableConstruct>(lhs: T, rhs: T) -> Bool {
+
     let mirrorLhs = Mirror(reflecting: lhs)
     let mirrorRhs = Mirror(reflecting: rhs)
-    
+
     guard let displayStyle = mirrorLhs.displayStyle,
         (displayStyle == .struct || displayStyle == .class) else {
-            
+
             print("Invalid use: type is not a construct.")
             return false
     }
-    
+
     let childrenLhs = mirrorLhs.children.filter { $0.label != nil }
     let childrenRhs = mirrorRhs.children.filter { $0.label != nil }
-    
-    if childrenLhs.count == childrenRhs.count {
-        
-        for i in 0..<childrenLhs.count {
-            
-            guard let valLhs = childrenLhs[i].value as? PseudoEquatableType,
-                  let valRhs = childrenRhs[i].value as? PseudoEquatableType else {
-                    print("Invalid use: Properties 'lhs.\(childrenLhs[i].label!)'",
-                        "and/or 'rhs.\(childrenRhs[i].label!)' are/is not of",
-                        "PseudoEquatableType type.")
-                    return false
-            }
-            
-            if !valLhs.isEqualTo(valRhs) {
-                return false
-            }
-        }
-    }
-        
-    else {
+
+    guard childrenLhs.count == childrenRhs.count else { return false }
+
+    guard !childrenLhs.contains(where: { !($0.value is PseudoEquatableType) }) else {
+        print("Invalid use: not all members have types that conforms to PseudoEquatableType.")
         return false
     }
-    
-    return true
+
+    return zip(
+        childrenLhs.flatMap { $0.value as? PseudoEquatableType },
+        childrenRhs.flatMap { $0.value as? PseudoEquatableType })
+        .reduce(true) { $0 && $1.0.isEqual(to: $1.1) }
 }
 
 //===----------------------------------------------------------------------===//
@@ -166,8 +149,9 @@ class MyClass {
     var myInt: Int
     var myString: String
     var myStruct: MyStruct
-    
-    init(myInt: Int, myString: String, myStruct: MyStruct) {
+
+    init(myInt: Int, myString: String,
+         myStruct: MyStruct, myColor: UIColor) {
         self.myInt = myInt
         self.myString = myString
         self.myStruct = myStruct
