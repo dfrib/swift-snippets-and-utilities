@@ -78,12 +78,50 @@ extension String : PseudoEquatableType {}
 
 /*  EquatableConstruct conformance to Equatable  */
 func ==<T: EquatableConstruct>(lhs: T, rhs: T) -> Bool {
+protocol EquatableConstruct : Equatable { }
+
+/*  Heterogeneous protocol acts as generic type constraint
+ for allowed property types in EquatableConstruct         */
+protocol PseudoEquatableType {
+    func isEqualTo(_ other: PseudoEquatableType) -> Bool
+}
+
+extension PseudoEquatableType where Self : Equatable {
+    func isEqualTo(_ other: PseudoEquatableType) -> Bool {
+        if let o = other as? Self { return self == o }
+        return false
+    }
+}
+
+/* Extend fundamental (equatable) Swift types to PseudoEquatableType  */
+extension Bool : PseudoEquatableType {}
+
+extension Int : PseudoEquatableType {}
+extension Int8 : PseudoEquatableType {}
+extension Int16 : PseudoEquatableType {}
+extension Int32 : PseudoEquatableType {}
+extension Int64 : PseudoEquatableType {}
+
+extension UInt : PseudoEquatableType {}
+extension UInt8 : PseudoEquatableType {}
+extension UInt16 : PseudoEquatableType {}
+extension UInt32 : PseudoEquatableType {}
+extension UInt64 : PseudoEquatableType {}
+
+extension Double : PseudoEquatableType {}
+extension Float : PseudoEquatableType {}
+extension Float80 : PseudoEquatableType {}
+
+extension String : PseudoEquatableType {}
+// ...
+/*  EquatableConstruct conformance to Equatable  */
+func ==<T: EquatableConstruct>(lhs: T, rhs: T) -> Bool {
     
     let mirrorLhs = Mirror(reflecting: lhs)
     let mirrorRhs = Mirror(reflecting: rhs)
     
-    guard let displayStyle = mirrorLhs.displayStyle
-        where (displayStyle == .Struct || displayStyle == .Class) else {
+    guard let displayStyle = mirrorLhs.displayStyle,
+        (displayStyle == .struct || displayStyle == .class) else {
             
             print("Invalid use: type is not a construct.")
             return false
@@ -97,7 +135,7 @@ func ==<T: EquatableConstruct>(lhs: T, rhs: T) -> Bool {
         for i in 0..<childrenLhs.count {
             
             guard let valLhs = childrenLhs[i].value as? PseudoEquatableType,
-                valRhs = childrenRhs[i].value as? PseudoEquatableType else {
+                  let valRhs = childrenRhs[i].value as? PseudoEquatableType else {
                     print("Invalid use: Properties 'lhs.\(childrenLhs[i].label!)'",
                         "and/or 'rhs.\(childrenRhs[i].label!)' are/is not of",
                         "PseudoEquatableType type.")
@@ -119,7 +157,6 @@ func ==<T: EquatableConstruct>(lhs: T, rhs: T) -> Bool {
 
 //===----------------------------------------------------------------------===//
 // Example usage
-
 struct MyStruct {
     var myInt: Int = 0
     var myString: String = ""
@@ -138,7 +175,7 @@ class MyClass {
 }
 
 /* As a MyStruct instance is contained in MyClass, extend MyStruct to PseudoEquatableType
-   to add the type to allowed property types in EquatableConstruct    */
+ to add the type to allowed property types in EquatableConstruct    */
 extension MyStruct : PseudoEquatableType {}
 
 /* Conformance to EquatableConstruct implies conformance to Equatable */
@@ -152,7 +189,6 @@ var bb = MyStruct()
 aa == bb            // true
 aa.myInt = 1
 aa == bb            // false
-
 var a = MyClass(myInt: 10, myString: "foo", myStruct: aa)
 var b = MyClass(myInt: 10, myString: "foo", myStruct: aa)
 
